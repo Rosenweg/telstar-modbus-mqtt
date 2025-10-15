@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  telstar-bridge:
+    build: .
+    container_name: telstar-modbus-mqtt
+    restart: unless-stopped
+    environment:
+      - MODBUS_HOST=${MODBUS_HOST}
+      - MODBUS_PORT=${MODBUS_PORT:-502}
+      - MODBUS_UNIT_ID=${MODBUS_UNIT_ID:-1}
+      - MODBUS_ADDRESS_OFFSET=${MODBUS_ADDRESS_OFFSET:-0}
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASS=${MQTT_PASS}
+      - MQTT_QOS=${MQTT_QOS:-0}
+      - MQTT_RETAIN=${MQTT_RETAIN:-false}
+      - MQTT_TLS=${MQTT_TLS:-false}
+      - MQTT_TLS_CA=${MQTT_TLS_CA:-}
+      - MQTT_TLS_CERT=${MQTT_TLS_CERT:-}
+      - MQTT_TLS_KEY=${MQTT_TLS_KEY:-}
+      - MQTT_TLS_INSECURE=${MQTT_TLS_INSECURE:-false}
+      - MQTT_TOPIC_PREFIX=${MQTT_TOPIC_PREFIX:-meter/telstar80a}
+      - INTERVAL=${INTERVAL:-10}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PROMETHEUS_PORT=${PROMETHEUS_PORT:-8000}
+      - PROMETHEUS_PREFIX=${PROMETHEUS_PREFIX:-telstar}
+    volumes:
+      - ./certs:/etc/mqtt/certs:ro   # optional: mount CA/cert/key here and set env paths accordingly
+    ports:
+      - "${PROMETHEUS_PORT:-8000}:${PROMETHEUS_PORT:-8000}"   # Prometheus scrape endpoint
+    networks:
+      - default
