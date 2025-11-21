@@ -10,7 +10,7 @@ on:
       - 'modbus_web_debug.py'
       - 'requirements-debug.txt'
       - 'Dockerfile.debug'
-      - 'docker-compose-debug.yml'
+      - 'docker-compose.web.yml'
       - '.github/workflows/build-debug.yml'
 
 jobs:

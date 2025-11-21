@@ -51,6 +51,10 @@ Außerdem stellt es einen Prometheus /metrics Endpunkt sowie eine REST-API für 
 
 ## Installation und Nutzung
 
+Das Projekt bietet zwei Docker-Compose-Konfigurationen:
+- **docker-compose.mqtt.yml**: MQTT-Bridge (Produktiv-Setup mit MQTT, Prometheus und REST-API)
+- **docker-compose.web.yml**: Web-Viewer (Debug-Setup ohne MQTT, nur Web-Interface und REST-API)
+
 ### Mit Docker Compose (Empfohlen)
 
 1. **Erstelle eine `.env` Datei** mit den Mindestanforderungen:
@@ -79,7 +83,7 @@ Außerdem stellt es einen Prometheus /metrics Endpunkt sowie eine REST-API für 
 
 3. **Container starten**
    ```bash
-   docker-compose up -d
+   docker-compose -f docker-compose.mqtt.yml up -d
    ```
 
    Der Service heißt `mqtt` und verwendet das vorgefertigte Image von ghcr.io.
@@ -89,7 +93,7 @@ Außerdem stellt es einen Prometheus /metrics Endpunkt sowie eine REST-API für 
    - REST-API: `http://<host>:5000/api/data`
    - Prometheus Metriken: `http://<host>:8000/metrics`
    - MQTT: Subscribe zu `<MQTT_TOPIC_PREFIX>/#`
-   - Logs: `docker-compose logs -f`
+   - Logs: `docker-compose -f docker-compose.mqtt.yml logs -f mqtt`
 
 ### Mit Docker (Standalone)
 
@@ -104,12 +108,12 @@ docker run -d \
   ghcr.io/rosenweg/telstar-modbus-mqtt:latest
 ```
 
-### Debug-Modus
+### Debug-Modus (Web-Viewer)
 
 Für Entwicklung und Debugging steht ein separater Container mit Web-Interface zur Verfügung:
 
 ```bash
-docker-compose -f docker-compose-debug.yml up -d
+docker-compose -f docker-compose.web.yml up -d
 ```
 
 Der Debug-Container (Service `web`) bietet:
@@ -391,7 +395,11 @@ Beispiel für einen HTTP-Request Node in Node-RED:
 
 ### Container startet nicht
 ```bash
-docker-compose logs
+# MQTT-Bridge Logs
+docker-compose -f docker-compose.mqtt.yml logs -f mqtt
+
+# Web-Viewer Logs
+docker-compose -f docker-compose.web.yml logs -f web
 ```
 
 ### Keine Verbindung zum Modbus-Gerät
