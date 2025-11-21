@@ -1,0 +1,23 @@
+version: "3.8"
+services:
+  telstar-debug:
+    build:
+      context: .
+      dockerfile: Dockerfile.debug
+    container_name: telstar-modbus-debug
+    restart: unless-stopped
+    environment:
+      - MODBUS_HOST=${MODBUS_HOST}
+      - MODBUS_PORT=${MODBUS_PORT:-502}
+      - MODBUS_UNIT_ID=${MODBUS_UNIT_ID:-1}
+      - MODBUS_ADDRESS_OFFSET=${MODBUS_ADDRESS_OFFSET:-0}
+      - INTERVAL=${INTERVAL:-10}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - WEB_PORT=${WEB_PORT:-5000}
+      - PROMETHEUS_PORT=${PROMETHEUS_PORT:-8000}
+      - PROMETHEUS_PREFIX=${PROMETHEUS_PREFIX:-telstar}
+    ports:
+      - "${WEB_PORT:-5000}:${WEB_PORT:-5000}"           # Web debug interface
+      - "${PROMETHEUS_PORT:-8000}:${PROMETHEUS_PORT:-8000}"  # Prometheus metrics
+    networks:
+      - default
