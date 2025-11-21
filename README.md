@@ -55,6 +55,30 @@ Das Projekt bietet zwei Docker-Compose-Konfigurationen:
 - **docker-compose.mqtt.yml**: MQTT-Bridge (Produktiv-Setup mit MQTT, Prometheus und REST-API)
 - **docker-compose.web.yml**: Web-Viewer (Debug-Setup ohne MQTT, nur Web-Interface und REST-API)
 
+### Hinweis zu Docker-Images
+
+Die Docker-Compose-Konfigurationen bauen die Images standardmäßig lokal aus den mitgelieferten Dockerfiles. Dies ist die empfohlene Methode für die meisten Anwender.
+
+**Vorteile des lokalen Builds:**
+- ✅ Keine Authentifizierung erforderlich
+- ✅ Unabhängig von externen Registry-Verfügbarkeiten
+- ✅ Volle Kontrolle über den Build-Prozess
+- ✅ Funktioniert direkt nach dem Klonen des Repositories
+
+**Alternative: Vorgefertigte Images von ghcr.io**
+
+Vorgefertigte Images können von der GitHub Container Registry bezogen werden. Beachten Sie, dass die Container-Packages möglicherweise als privat markiert sind, auch wenn der Quellcode öffentlich ist. In diesem Fall ist eine Authentifizierung erforderlich:
+
+```bash
+# Mit GitHub Personal Access Token (PAT) authentifizieren (falls erforderlich)
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+
+# Dann docker-compose Dateien anpassen:
+# Ersetze die build-Direktiven durch:
+# image: ghcr.io/rosenweg/telstar-modbus-mqtt:latest
+# image: ghcr.io/rosenweg/telstar-modbus-web-viewer:latest
+```
+
 ### Mit Docker Compose (Empfohlen)
 
 1. **Erstelle eine `.env` Datei** mit den Mindestanforderungen:
@@ -86,8 +110,8 @@ Das Projekt bietet zwei Docker-Compose-Konfigurationen:
    docker-compose -f docker-compose.mqtt.yml up -d
    ```
 
-   Der Service heißt `mqtt` und verwendet das vorgefertigte Image von ghcr.io.
-   Für lokale Entwicklung kann auch mit `--build` das Image lokal gebaut werden.
+   Der Service heißt `mqtt` und baut das Image automatisch lokal aus dem mitgelieferten Dockerfile.
+   Beim ersten Start wird das Image gebaut, nachfolgende Starts nutzen das gecachte Image.
 
 4. **Funktionalität überprüfen**
    - REST-API: `http://<host>:5000/api/data`
@@ -98,14 +122,17 @@ Das Projekt bietet zwei Docker-Compose-Konfigurationen:
 ### Mit Docker (Standalone)
 
 ```bash
-docker pull ghcr.io/rosenweg/telstar-modbus-mqtt:latest
+# Image lokal bauen
+docker build -t telstar-modbus-mqtt:local -f Dockerfile .
+
+# Container starten
 docker run -d \
   --name telstar-mqtt-bridge \
   -e MODBUS_HOST=192.168.1.100 \
   -e MQTT_HOST=192.168.1.10 \
   -p 8000:8000 \
   -p 5000:5000 \
-  ghcr.io/rosenweg/telstar-modbus-mqtt:latest
+  telstar-modbus-mqtt:local
 ```
 
 ### Debug-Modus (Web-Viewer)
@@ -121,7 +148,7 @@ Der Debug-Container (Service `web`) bietet:
 - Echtzeit-Anzeige aller Modbus-Register
 - REST-API für direkten Datenabruf
 - Detaillierte Logging-Informationen
-- Verwendet das vorgefertigte Image von ghcr.io
+- Baut automatisch lokal aus dem Dockerfile.debug
 
 ## MQTT Topics
 
