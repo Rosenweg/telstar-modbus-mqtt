@@ -9,10 +9,12 @@ import os
 import time
 import json
 import logging
+import threading
 from datetime import datetime
 from pymodbus.client.sync import ModbusTcpClient
 import paho.mqtt.client as mqtt
 from prometheus_client import start_http_server, Gauge
+from flask import Flask, jsonify
 
 # ----------------------------
 # Config from env
@@ -45,6 +47,9 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 # Prometheus
 PROMETHEUS_PORT = int(os.getenv("PROMETHEUS_PORT", "8000"))
 PROMETHEUS_PREFIX = os.getenv("PROMETHEUS_PREFIX", "telstar")
+
+# API/Webhook port
+API_PORT = int(os.getenv("API_PORT", "5000"))
 
 logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO),
                     format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -147,6 +152,75 @@ for _, name, _, _, _ in REGISTERS:
 SNAPSHOT_GAUGE = Gauge(f"{PROMETHEUS_PREFIX}_snapshot_timestamp", "Snapshot timestamp")
 
 # ----------------------------
+# Global state for API/Webhooks
+# ----------------------------
+latest_data = {
+    "timestamp": None,
+    "connection_status": "Not connected",
+    "registers": {}
+}
+
+# ----------------------------
+# Flask API for Webhooks
+# ----------------------------
+app = Flask(__name__)
+
+@app.route('/api/data')
+def api_data():
+    """Get all register values"""
+    return jsonify(latest_data)
+
+@app.route('/api/topics')
+def api_topics():
+    """List all available topics/register names"""
+    topics = list(latest_data.get("registers", {}).keys())
+    return jsonify({"topics": topics, "count": len(topics)})
+
+@app.route('/api/topic/<topic_name>')
+def api_topic(topic_name):
+    """Get a specific topic/register value with scaled unit"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return jsonify({
+            "topic": topic_name,
+            "data": registers[topic_name],
+            "timestamp": latest_data.get("timestamp")
+        })
+    else:
+        return jsonify({
+            "error": "Topic not found",
+            "topic": topic_name,
+            "available_topics": list(registers.keys())
+        }), 404
+
+@app.route('/api/topic/<topic_name>/value')
+def api_topic_value(topic_name):
+    """Get only the scaled value of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["value"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
+
+@app.route('/api/topic/<topic_name>/unit')
+def api_topic_unit(topic_name):
+    """Get only the unit of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["unit"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
+
+@app.route('/api/topic/<topic_name>/raw')
+def api_topic_raw(topic_name):
+    """Get only the raw value of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["raw_value"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
+
+# ----------------------------
 # Helpers: combine registers (Big Endian)
 # ----------------------------
 def combine_registers_be(regs, signed=False):
@@ -228,11 +302,8 @@ def read_register_entry(client, entry):
 # ----------------------------
 # Main loop
 # ----------------------------
-def main():
-    # Start Prometheus server
-    start_http_server(PROMETHEUS_PORT)
-    log.info("Prometheus metrics available on :%s/metrics", PROMETHEUS_PORT)
-
+def modbus_loop():
+    global latest_data
     mqtt_connect()
     client = None
     while True:
@@ -241,11 +312,13 @@ def main():
                 client = ModbusTcpClient(MODBUS_HOST, port=MODBUS_PORT, timeout=5)
                 if not client.connect():
                     log.warning("Cannot connect to Modbus %s:%s — retry in 5s", MODBUS_HOST, MODBUS_PORT)
+                    latest_data["connection_status"] = f"Connection failed to {MODBUS_HOST}:{MODBUS_PORT}"
                     client.close()
                     client = None
                     time.sleep(5)
                     continue
                 log.info("Connected to Modbus %s:%s", MODBUS_HOST, MODBUS_PORT)
+                latest_data["connection_status"] = "Connected"
 
             results = {}
             for entry in REGISTERS:
@@ -277,7 +350,14 @@ def main():
                     # if metric not present or conversion fails, skip
                     pass
 
-                results[res["name"]] = scaled
+                # Store for API/Webhooks (with unit information)
+                results[res["name"]] = {
+                    "value": scaled,
+                    "unit": scaled_unit,
+                    "raw_value": res["value_raw"],
+                    "raw_registers": res["raw_registers"],
+                    "address": res["address"]
+                }
 
             # snapshot (combined)
             snapshot_topic = f"{MQTT_TOPIC_PREFIX}/snapshot"
@@ -289,16 +369,35 @@ def main():
 
             SNAPSHOT_GAUGE.set(int(time.time()))
 
+            # Update global state for API/Webhooks
+            latest_data["registers"] = results
+            latest_data["timestamp"] = int(time.time())
+
             time.sleep(INTERVAL)
         except KeyboardInterrupt:
             log.info("Stopping due to KeyboardInterrupt")
             break
         except Exception as e:
             log.exception("Main loop exception: %s — reconnecting in 5s", e)
+            latest_data["connection_status"] = f"Error: {str(e)}"
             if client:
                 client.close()
                 client = None
             time.sleep(5)
+
+def main():
+    # Start Prometheus server
+    start_http_server(PROMETHEUS_PORT)
+    log.info("Prometheus metrics available on :%s/metrics", PROMETHEUS_PORT)
+
+    # Start Modbus loop in background thread
+    modbus_thread = threading.Thread(target=modbus_loop, daemon=True)
+    modbus_thread.start()
+    log.info("Modbus loop started")
+
+    # Start Flask API server
+    log.info("Starting API/Webhook server on port %s", API_PORT)
+    app.run(host='0.0.0.0', port=API_PORT, debug=False)
 
 if __name__ == "__main__":
     main()

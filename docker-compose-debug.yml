@@ -14,10 +14,7 @@ services:
       - INTERVAL=${INTERVAL:-10}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - WEB_PORT=${WEB_PORT:-5000}
-      - PROMETHEUS_PORT=${PROMETHEUS_PORT:-8000}
-      - PROMETHEUS_PREFIX=${PROMETHEUS_PREFIX:-telstar}
     ports:
-      - "${WEB_PORT:-5000}:${WEB_PORT:-5000}"           # Web debug interface
-      - "${PROMETHEUS_PORT:-8000}:${PROMETHEUS_PORT:-8000}"  # Prometheus metrics
+      - "${WEB_PORT:-5000}:${WEB_PORT:-5000}"  # Web interface
     networks:
       - default

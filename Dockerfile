@@ -24,4 +24,7 @@ VOLUME ["/etc/mqtt/certs"]
 
 ENV PYTHONUNBUFFERED=1
 
+# Expose Prometheus (8000) and API/Webhook (5000) ports
+EXPOSE 8000 5000
+
 CMD ["python", "/app/modbus_mqtt_bridge.py"]

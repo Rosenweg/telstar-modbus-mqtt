@@ -13,7 +13,6 @@ import threading
 from datetime import datetime
 from pymodbus.client.sync import ModbusTcpClient
 from flask import Flask, render_template_string, jsonify
-from prometheus_client import start_http_server, Gauge
 
 # ----------------------------
 # Config from env
@@ -29,13 +28,9 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 # Web interface port
 WEB_PORT = int(os.getenv("WEB_PORT", "5000"))
 
-# Prometheus
-PROMETHEUS_PORT = int(os.getenv("PROMETHEUS_PORT", "8000"))
-PROMETHEUS_PREFIX = os.getenv("PROMETHEUS_PREFIX", "telstar")
-
 logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO),
                     format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-log = logging.getLogger("modbus-web-debug")
+log = logging.getLogger("modbus-web-viewer")
 
 # ----------------------------
 # Register mapping (from PDF)
@@ -109,16 +104,6 @@ def scale_value_by_name(name, raw_value, unit_label):
             fn, unit = SCALE_MAP[key]
             return fn(raw_value), unit
     return raw_value, unit_label
-
-# ----------------------------
-# Prometheus metrics
-# ----------------------------
-PROM_GAUGES = {}
-for _, name, _, _, _ in REGISTERS:
-    metric_name = f"{PROMETHEUS_PREFIX}_{name}".replace(".", "_").replace("-", "_")
-    PROM_GAUGES[name] = Gauge(metric_name, f"Telstar register {name}")
-
-SNAPSHOT_GAUGE = Gauge(f"{PROMETHEUS_PREFIX}_snapshot_timestamp", "Snapshot timestamp")
 
 # ----------------------------
 # Helpers
@@ -212,7 +197,7 @@ HTML_TEMPLATE = """
                     <div class="text-sm text-gray-700">
                         <div class="font-bold mb-1">Configuration:</div>
                         <div>Modbus Host: <span class="font-mono bg-white px-2 py-1 rounded">{{ modbus_host }}:{{ modbus_port }}</span> (Unit ID: {{ modbus_unit_id }})</div>
-                        <div class="mt-1">Update Interval: {{ interval }}s | Web Port: {{ web_port }} | Prometheus: {{ prometheus_port }}</div>
+                        <div class="mt-1">Update Interval: {{ interval }}s | Web Port: {{ web_port }}</div>
                     </div>
                 </div>
             </div>
@@ -336,12 +321,61 @@ def index():
                                  modbus_port=MODBUS_PORT,
                                  modbus_unit_id=MODBUS_UNIT_ID,
                                  interval=INTERVAL,
-                                 web_port=WEB_PORT,
-                                 prometheus_port=PROMETHEUS_PORT)
+                                 web_port=WEB_PORT)
 
 @app.route('/api/data')
 def api_data():
     return jsonify(latest_data)
+
+@app.route('/api/topics')
+def api_topics():
+    """List all available topics/register names"""
+    topics = list(latest_data.get("registers", {}).keys())
+    return jsonify({"topics": topics, "count": len(topics)})
+
+@app.route('/api/topic/<topic_name>')
+def api_topic(topic_name):
+    """Get a specific topic/register value"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return jsonify({
+            "topic": topic_name,
+            "data": registers[topic_name],
+            "timestamp": latest_data.get("timestamp")
+        })
+    else:
+        return jsonify({
+            "error": "Topic not found",
+            "topic": topic_name,
+            "available_topics": list(registers.keys())
+        }), 404
+
+@app.route('/api/topic/<topic_name>/value')
+def api_topic_value(topic_name):
+    """Get only the scaled value of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["value"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
+
+@app.route('/api/topic/<topic_name>/unit')
+def api_topic_unit(topic_name):
+    """Get only the unit of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["unit"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
+
+@app.route('/api/topic/<topic_name>/raw')
+def api_topic_raw(topic_name):
+    """Get only the raw value of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["raw_value"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
 
 # ----------------------------
 # Modbus reading loop
@@ -382,15 +416,8 @@ def modbus_loop():
                     "address": res["address"]
                 }
 
-                # Prometheus metric
-                try:
-                    PROM_GAUGES[res["name"]].set(float(scaled))
-                except Exception:
-                    pass
-
             latest_data["registers"] = results
             latest_data["timestamp"] = int(time.time())
-            SNAPSHOT_GAUGE.set(int(time.time()))
 
             log.debug("Read %d registers successfully", len(results))
             time.sleep(INTERVAL)
@@ -410,10 +437,6 @@ def modbus_loop():
 # Main entry point
 # ----------------------------
 def main():
-    # Start Prometheus server
-    start_http_server(PROMETHEUS_PORT)
-    log.info("Prometheus metrics available on :%s/metrics", PROMETHEUS_PORT)
-
     # Start Modbus reading thread
     modbus_thread = threading.Thread(target=modbus_loop, daemon=True)
     modbus_thread.start()

@@ -1,18 +1,20 @@
-name: Build and Publish
+name: Build and Publish Debug Container
 
 on:
+  # Manual trigger
+  workflow_dispatch:
+  # Only trigger on changes to debug-related files
   push:
     branches: [ main, master ]
     paths:
-      - 'modbus_mqtt_bridge.py'
-      - 'requirements.txt'
-      - 'Dockerfile'
-      - 'docker-compose.yml'
-      - '.github/workflows/build.yml'
-  workflow_dispatch:
+      - 'modbus_web_debug.py'
+      - 'requirements-debug.txt'
+      - 'Dockerfile.debug'
+      - 'docker-compose-debug.yml'
+      - '.github/workflows/build-debug.yml'
 
 jobs:
-  build-and-push:
+  build-and-push-debug:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,9 +33,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push debug
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./Dockerfile.debug
           push: true
-          tags: ghcr.io/rosenweg/telstar-modbus-mqtt:latest
+          tags: |
+            ghcr.io/rosenweg/telstar-modbus-web-viewer:latest
+            ghcr.io/rosenweg/telstar-modbus-web-viewer:${{ github.sha }}

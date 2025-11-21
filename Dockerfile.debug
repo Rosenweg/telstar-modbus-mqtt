@@ -21,7 +21,7 @@ COPY modbus_web_debug.py /app/modbus_web_debug.py
 
 ENV PYTHONUNBUFFERED=1
 
-# Expose web interface port (default 5000) and Prometheus port (default 8000)
-EXPOSE 5000 8000
+# Expose web interface port (default 5000)
+EXPOSE 5000
 
 CMD ["python", "/app/modbus_web_debug.py"]
