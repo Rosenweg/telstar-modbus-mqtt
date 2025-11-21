@@ -1,9 +1,7 @@
 version: "3.8"
 services:
-  telstar-debug:
-    build:
-      context: .
-      dockerfile: Dockerfile.debug
+  web:
+    image: ghcr.io/rosenweg/telstar-modbus-web-viewer:latest
     container_name: telstar-modbus-debug
     restart: unless-stopped
     environment:

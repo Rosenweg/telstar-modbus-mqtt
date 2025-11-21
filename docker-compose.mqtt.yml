@@ -1,7 +1,7 @@
 version: "3.8"
 services:
-  telstar-bridge:
-    build: .
+  mqtt:
+    image: ghcr.io/rosenweg/telstar-modbus-mqtt:latest
     container_name: telstar-modbus-mqtt
     restart: unless-stopped
     environment:

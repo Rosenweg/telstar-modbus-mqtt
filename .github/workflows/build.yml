@@ -7,7 +7,7 @@ on:
       - 'modbus_mqtt_bridge.py'
       - 'requirements.txt'
       - 'Dockerfile'
-      - 'docker-compose.yml'
+      - 'docker-compose.mqtt.yml'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
