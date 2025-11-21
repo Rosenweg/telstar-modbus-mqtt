@@ -1,0 +1,27 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# --- install system deps for building Python packages safely ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    libffi-dev \
+    libssl-dev \
+    python3-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# --- install Python deps including Flask ---
+COPY requirements-debug.txt /app/requirements-debug.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r /app/requirements-debug.txt
+
+# --- copy debug script ---
+COPY modbus_web_debug.py /app/modbus_web_debug.py
+
+ENV PYTHONUNBUFFERED=1
+
+# Expose web interface port (default 5000) and Prometheus port (default 8000)
+EXPOSE 5000 8000
+
+CMD ["python", "/app/modbus_web_debug.py"]

@@ -25,9 +25,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push production
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: ghcr.io/rosenweg/telstar-modbus-mqtt:latest
+
+      - name: Build and push debug
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.debug
+          push: true
+          tags: ghcr.io/rosenweg/telstar-modbus-mqtt:debug
