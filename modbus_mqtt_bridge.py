@@ -11,7 +11,7 @@ import json
 import logging
 import threading
 from datetime import datetime
-from pymodbus.client.sync import ModbusTcpClient
+from pymodbus.client import ModbusTcpClient
 import paho.mqtt.client as mqtt
 from prometheus_client import start_http_server, Gauge
 from flask import Flask, jsonify

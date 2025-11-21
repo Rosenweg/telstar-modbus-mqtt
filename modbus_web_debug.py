@@ -11,7 +11,7 @@ import json
 import logging
 import threading
 from datetime import datetime
-from pymodbus.client.sync import ModbusTcpClient
+from pymodbus.client import ModbusTcpClient
 from flask import Flask, render_template_string, jsonify
 
 # ----------------------------
