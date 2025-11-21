@@ -40,5 +40,5 @@ jobs:
           file: ./Dockerfile.debug
           push: true
           tags: |
-            ghcr.io/rosenweg/telstar-modbus-mqtt:debug
-            ghcr.io/rosenweg/telstar-modbus-mqtt:debug-${{ github.sha }}
+            ghcr.io/rosenweg/telstar-modbus-web-viewer:latest
+            ghcr.io/rosenweg/telstar-modbus-web-viewer:${{ github.sha }}

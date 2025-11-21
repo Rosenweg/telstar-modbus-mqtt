@@ -1,3 +1,2 @@
 pymodbus==3.6.8
 flask==3.0.0
-prometheus-client==0.16.0

@@ -1,3 +1,4 @@
 pymodbus==3.6.8
 paho-mqtt==1.6.1
 prometheus-client==0.16.0
+flask==3.0.0
