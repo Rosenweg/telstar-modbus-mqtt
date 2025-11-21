@@ -79,8 +79,11 @@ Außerdem stellt es einen Prometheus /metrics Endpunkt sowie eine REST-API für 
 
 3. **Container starten**
    ```bash
-   docker-compose up -d --build
+   docker-compose up -d
    ```
+
+   Der Service heißt `mqtt` und verwendet das vorgefertigte Image von ghcr.io.
+   Für lokale Entwicklung kann auch mit `--build` das Image lokal gebaut werden.
 
 4. **Funktionalität überprüfen**
    - REST-API: `http://<host>:5000/api/data`
@@ -91,13 +94,14 @@ Außerdem stellt es einen Prometheus /metrics Endpunkt sowie eine REST-API für 
 ### Mit Docker (Standalone)
 
 ```bash
-docker build -t telstar-modbus-mqtt .
+docker pull ghcr.io/rosenweg/telstar-modbus-mqtt:latest
 docker run -d \
-  --name telstar-bridge \
+  --name telstar-mqtt-bridge \
   -e MODBUS_HOST=192.168.1.100 \
   -e MQTT_HOST=192.168.1.10 \
   -p 8000:8000 \
-  telstar-modbus-mqtt
+  -p 5000:5000 \
+  ghcr.io/rosenweg/telstar-modbus-mqtt:latest
 ```
 
 ### Debug-Modus
@@ -108,11 +112,12 @@ Für Entwicklung und Debugging steht ein separater Container mit Web-Interface z
 docker-compose -f docker-compose-debug.yml up -d
 ```
 
-Der Debug-Container bietet:
-- Web-Interface auf Port 5001
+Der Debug-Container (Service `web`) bietet:
+- Web-Interface auf Port 5000 (Standard)
 - Echtzeit-Anzeige aller Modbus-Register
-- Webhook-Test-Interface
+- REST-API für direkten Datenabruf
 - Detaillierte Logging-Informationen
+- Verwendet das vorgefertigte Image von ghcr.io
 
 ## MQTT Topics
 
