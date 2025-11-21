@@ -350,6 +350,33 @@ def api_topic(topic_name):
             "available_topics": list(registers.keys())
         }), 404
 
+@app.route('/api/topic/<topic_name>/value')
+def api_topic_value(topic_name):
+    """Get only the scaled value of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["value"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
+
+@app.route('/api/topic/<topic_name>/unit')
+def api_topic_unit(topic_name):
+    """Get only the unit of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["unit"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
+
+@app.route('/api/topic/<topic_name>/raw')
+def api_topic_raw(topic_name):
+    """Get only the raw value of a specific topic"""
+    registers = latest_data.get("registers", {})
+    if topic_name in registers:
+        return str(registers[topic_name]["raw_value"]), 200, {'Content-Type': 'text/plain'}
+    else:
+        return f"Topic '{topic_name}' not found", 404
+
 # ----------------------------
 # Modbus reading loop
 # ----------------------------
