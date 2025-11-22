@@ -1,10 +1,7 @@
 version: "3.8"
 services:
   mqtt:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: telstar-modbus-mqtt:local
+    image: ghcr.io/rosenweg/telstar-modbus-mqtt:latest
     container_name: telstar-modbus-mqtt
     restart: unless-stopped
     environment:
