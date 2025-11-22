@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Telstar Modbus Debug - Preview</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-primary to-secondary min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 pb-4 border-b-4 border-primary flex items-center gap-3">
+                <span class="text-4xl">🔌</span>
+                Telstar Modbus Debug Interface
+            </h1>
+
+            <div id="status" class="mb-6 p-4 rounded-lg font-semibold bg-green-100 text-green-800 border border-green-300">
+                ✓ Status: Connected to Modbus
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+                <div class="flex items-start">
+                    <span class="text-2xl mr-3">📊</span>
+                    <div class="text-sm text-gray-700">
+                        <div class="font-bold mb-1">Configuration:</div>
+                        <div>Modbus Host: <span class="font-mono bg-white px-2 py-1 rounded">192.168.1.100:502</span> (Unit ID: 1)</div>
+                        <div class="mt-1">Update Interval: 10s | Web Port: 5000</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                <!-- Power Cards (Red) -->
+                <div class="group bg-red-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-red-500">
+                    <div class="font-bold text-red-700 text-xs uppercase tracking-wide mb-2">
+                        Active Power Total
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        3250.450
+                        <span class="text-lg text-gray-600 ml-1">W</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2004</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">3250450</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[49, 41650]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group bg-red-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-red-500">
+                    <div class="font-bold text-red-700 text-xs uppercase tracking-wide mb-2">
+                        Active Power L1
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        1150.250
+                        <span class="text-lg text-gray-600 ml-1">W</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2006</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">1150250</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[17, 33530]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group bg-red-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-red-500">
+                    <div class="font-bold text-red-700 text-xs uppercase tracking-wide mb-2">
+                        Active Power L2
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        1050.100
+                        <span class="text-lg text-gray-600 ml-1">W</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2008</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">1050100</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[16, 2340]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voltage Cards (Yellow) -->
+                <div class="group bg-yellow-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-yellow-500">
+                    <div class="font-bold text-yellow-700 text-xs uppercase tracking-wide mb-2">
+                        Voltage L1
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        230.500
+                        <span class="text-lg text-gray-600 ml-1">V</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2014</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">230500</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[3, 34516]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group bg-yellow-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-yellow-500">
+                    <div class="font-bold text-yellow-700 text-xs uppercase tracking-wide mb-2">
+                        Voltage L2
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        229.800
+                        <span class="text-lg text-gray-600 ml-1">V</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2016</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">229800</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[3, 33448]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group bg-yellow-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-yellow-500">
+                    <div class="font-bold text-yellow-700 text-xs uppercase tracking-wide mb-2">
+                        Voltage L3
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        231.200
+                        <span class="text-lg text-gray-600 ml-1">V</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2018</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">231200</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[3, 35648]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Cards (Blue) -->
+                <div class="group bg-blue-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-blue-500">
+                    <div class="font-bold text-blue-700 text-xs uppercase tracking-wide mb-2">
+                        Current L1
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        5.125
+                        <span class="text-lg text-gray-600 ml-1">A</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x201A</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">5125</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[0, 5125]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group bg-blue-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-blue-500">
+                    <div class="font-bold text-blue-700 text-xs uppercase tracking-wide mb-2">
+                        Current L2
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        4.680
+                        <span class="text-lg text-gray-600 ml-1">A</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x201C</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">4680</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[0, 4680]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group bg-blue-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-blue-500">
+                    <div class="font-bold text-blue-700 text-xs uppercase tracking-wide mb-2">
+                        Current L3
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        4.920
+                        <span class="text-lg text-gray-600 ml-1">A</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x201E</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">4920</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[0, 4920]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Energy Cards (Green) -->
+                <div class="group bg-green-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-green-500">
+                    <div class="font-bold text-green-700 text-xs uppercase tracking-wide mb-2">
+                        Active Energy Import Total
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        12345.678
+                        <span class="text-lg text-gray-600 ml-1">kWh</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2024</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">12345678000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[2, 53785, 11696, 16960]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group bg-green-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-green-500">
+                    <div class="font-bold text-green-700 text-xs uppercase tracking-wide mb-2">
+                        Active Energy Export Total
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        987.654
+                        <span class="text-lg text-gray-600 ml-1">kWh</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2028</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">987654000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[0, 15092, 3270, 61376]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Power Factor (Gray) -->
+                <div class="group bg-gray-50 hover:shadow-lg transition-all duration-200 p-4 rounded-lg border-l-4 border-gray-500">
+                    <div class="font-bold text-gray-700 text-xs uppercase tracking-wide mb-2">
+                        Power Factor L1
+                    </div>
+                    <div class="text-3xl font-bold text-gray-800 my-2">
+                        0.985
+                        <span class="text-lg text-gray-600 ml-1"></span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200 space-y-1">
+                        <div class="flex justify-between">
+                            <span class="font-medium">Address:</span>
+                            <span class="font-mono">0x2020</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Raw value:</span>
+                            <span class="font-mono">985</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">Registers:</span>
+                            <span class="font-mono text-xs">[985]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-right text-sm text-gray-600 mt-6" id="timestamp">
+                Last update: 21.11.2025, 14:30:45
+            </div>
+        </div>
+    </div>
+</body>
+</html>
