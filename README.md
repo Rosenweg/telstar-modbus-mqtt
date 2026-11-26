@@ -57,31 +57,24 @@ Das Projekt bietet zwei Docker-Compose-Konfigurationen:
 
 ### Hinweis zu Docker-Images
 
-Die Docker-Compose-Konfigurationen bauen die Images standardmäßig lokal aus den mitgelieferten Dockerfiles. Dies ist die empfohlene Methode für die meisten Anwender.
-
-**Vorteile des lokalen Builds:**
-- ✅ Keine Authentifizierung erforderlich
-- ✅ Unabhängig von externen Registry-Verfügbarkeiten
-- ✅ Volle Kontrolle über den Build-Prozess
-- ✅ Funktioniert direkt nach dem Klonen des Repositories
-
-**Alternative: Vorgefertigte Images von ghcr.io**
-
-Vorgefertigte Images können von der GitHub Container Registry bezogen werden. Beachten Sie, dass die Container-Packages möglicherweise als privat markiert sind, auch wenn der Quellcode öffentlich ist. In diesem Fall ist eine Authentifizierung erforderlich:
+Beide Compose-Dateien ziehen fertige Images aus der GitHub Container Registry
+(`ghcr.io/rosenweg/telstar-modbus-mqtt:latest` bzw.
+`ghcr.io/rosenweg/telstar-modbus-web-viewer:latest`), gebaut von den Workflows
+`build.yml` und `build-debug.yml`. Sind die Packages privat, vorher anmelden:
 
 ```bash
-# Mit GitHub Personal Access Token (PAT) authentifizieren (falls erforderlich)
 echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
-
-# Dann docker-compose Dateien anpassen:
-# Ersetze die build-Direktiven durch:
-# image: ghcr.io/rosenweg/telstar-modbus-mqtt:latest
-# image: ghcr.io/rosenweg/telstar-modbus-web-viewer:latest
 ```
+
+Wer lieber lokal baut, ersetzt in der Compose-Datei `image:` durch
+`build: .` (MQTT-Bridge, `Dockerfile`) bzw. `build: { context: ., dockerfile: Dockerfile.debug }`
+(Web-Viewer) oder nimmt den Weg unter „Mit Docker (Standalone)“.
 
 ### Mit Docker Compose (Empfohlen)
 
-1. **Erstelle eine `.env` Datei** mit den Mindestanforderungen:
+1. **Konfiguration anlegen.** Vorlagen mit allen Variablen liegen bei: `.env.mqtt`
+   (MQTT-Bridge) und `.env.web` (Web-Viewer); Start dann mit `--env-file .env.mqtt`
+   bzw. `--env-file .env.web`. Oder eine `.env` Datei mit den Mindestanforderungen:
    ```env
    MODBUS_HOST=192.168.1.100
    MQTT_HOST=192.168.1.10
@@ -110,8 +103,7 @@ echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
    docker-compose -f docker-compose.mqtt.yml up -d
    ```
 
-   Der Service heißt `mqtt` und baut das Image automatisch lokal aus dem mitgelieferten Dockerfile.
-   Beim ersten Start wird das Image gebaut, nachfolgende Starts nutzen das gecachte Image.
+   Der Service heißt `mqtt` und nutzt das Image von ghcr.io (siehe oben).
 
 4. **Funktionalität überprüfen**
    - REST-API: `http://<host>:5000/api/data`
