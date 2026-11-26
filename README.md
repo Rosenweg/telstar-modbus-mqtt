@@ -132,4 +132,4 @@ Fragen und Probleme als Issue im Repo melden.
 
 ## Lizenz
 
-Laut bisherigem README Open Source und frei verwendbar; eine LICENSE-Datei fehlt noch.
+GPL-3.0-or-later, siehe [LICENSE](LICENSE).
